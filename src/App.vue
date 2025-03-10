@@ -44,7 +44,7 @@
 </template>
 
 <script>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 
 export default {
@@ -58,6 +58,21 @@ export default {
       isAuthenticated.value = localStorage.getItem('isAuthenticated') === 'true'
       churchName.value = localStorage.getItem('churchName') || ''
       churchLogo.value = localStorage.getItem('churchLogo') || ''
+
+      // Adicionar listeners para mudanças no localStorage
+      window.addEventListener('storage', (e) => {
+        if (e.key === 'churchName') {
+          churchName.value = e.newValue || ''
+        }
+        if (e.key === 'churchLogo') {
+          churchLogo.value = e.newValue || ''
+        }
+      })
+    })
+
+    // Atualizar o título da página quando o nome da igreja mudar
+    watch(churchName, (newName) => {
+      document.title = newName ? `${newName} - Sistema de Gestão` : 'Igreja Management'
     })
 
     const handleLogout = () => {
