@@ -1,6 +1,6 @@
 <template>
   <div class="app-container">
-    <header v-if="isAuthenticated" class="app-header">
+    <header v-if="!isLoginPage" class="app-header">
       <div class="logo">
         <img v-if="churchLogo" :src="churchLogo" alt="Logo da Igreja" class="church-logo">
         <h1>{{ churchName || 'Igreja Management' }}</h1>
@@ -44,8 +44,11 @@
 </template>
 
 <script>
-import { ref, onMounted, watch } from 'vue'
+import { ref, onMounted, watch, computed } from 'vue'
 import { useRouter } from 'vue-router'
+import { auth, db } from './firebase/config'
+import { signOut } from 'firebase/auth'
+import { doc, getDoc } from 'firebase/firestore'
 
 export default {
   setup() {
@@ -53,38 +56,66 @@ export default {
     const isAuthenticated = ref(false)
     const churchName = ref('')
     const churchLogo = ref('')
+    const isLoginPage = computed(() => router.currentRoute.value.path === '/login')
+
+    const loadChurchData = async () => {
+      try {
+        const churchDoc = await getDoc(doc(db, 'church', 'settings'))
+        if (churchDoc.exists()) {
+          const data = churchDoc.data()
+          churchName.value = data.name || ''
+          churchLogo.value = data.logo || ''
+          // Atualiza também no localStorage para backup
+          localStorage.setItem('churchName', data.name || '')
+          localStorage.setItem('churchLogo', data.logo || '')
+        }
+      } catch (error) {
+        console.error('Erro ao carregar dados da igreja:', error)
+        // Fallback para dados do localStorage
+        churchName.value = localStorage.getItem('churchName') || ''
+        churchLogo.value = localStorage.getItem('churchLogo') || ''
+      }
+    }
 
     onMounted(() => {
-      isAuthenticated.value = localStorage.getItem('isAuthenticated') === 'true'
-      churchName.value = localStorage.getItem('churchName') || ''
-      churchLogo.value = localStorage.getItem('churchLogo') || ''
-
-      // Adicionar listeners para mudanças no localStorage
-      window.addEventListener('storage', (e) => {
-        if (e.key === 'churchName') {
-          churchName.value = e.newValue || ''
-        }
-        if (e.key === 'churchLogo') {
-          churchLogo.value = e.newValue || ''
+      auth.onAuthStateChanged((user) => {
+        isAuthenticated.value = !!user
+        if (user) {
+          loadChurchData()
+        } else {
+          router.push('/login')
         }
       })
     })
 
-    // Atualizar o título da página quando o nome da igreja mudar
+    window.addEventListener('storage', (e) => {
+      if (e.key === 'churchName') {
+        churchName.value = e.newValue || ''
+      }
+      if (e.key === 'churchLogo') {
+        churchLogo.value = e.newValue || ''
+      }
+    })
     watch(churchName, (newName) => {
       document.title = newName ? `${newName} - Sistema de Gestão` : 'Igreja Management'
     })
 
-    const handleLogout = () => {
-      localStorage.removeItem('isAuthenticated')
-      router.push('/login')
+    const handleLogout = async () => {
+      try {
+        await signOut(auth)
+        localStorage.removeItem('isAuthenticated')
+        router.push('/login')
+      } catch (error) {
+        console.error('Erro ao fazer logout:', error)
+      }
     }
 
     return {
       isAuthenticated,
       handleLogout,
       churchName,
-      churchLogo
+      churchLogo,
+      isLoginPage
     }
   }
 }
