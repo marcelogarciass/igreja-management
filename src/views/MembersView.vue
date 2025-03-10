@@ -153,7 +153,9 @@
 </template>
 
 <script>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
+import { db } from '@/firebase/config'
+import { collection, addDoc, getDocs, deleteDoc, doc, updateDoc } from 'firebase/firestore'
 
 export default {
   name: 'MembersView',
@@ -168,8 +170,83 @@ export default {
       children: []
     })
 
-    // Adicionar a referência para members
     const members = ref([])
+
+    // Carregar membros do Firestore
+    const loadMembers = async () => {
+      try {
+        const querySnapshot = await getDocs(collection(db, 'members'))
+        members.value = querySnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }))
+      } catch (error) {
+        console.error('Erro ao carregar membros:', error)
+      }
+    }
+
+    // Adicionar membro ao Firestore
+    const handleSubmit = async () => {
+      try {
+        console.log('Iniciando salvamento...', memberForm.value) // Debug
+        const docRef = await addDoc(collection(db, 'members'), {
+          ...memberForm.value,
+          createdAt: new Date().toISOString()
+        })
+        
+        console.log('Documento salvo com ID:', docRef.id) // Debug
+        
+        members.value.push({
+          id: docRef.id,
+          ...memberForm.value
+        })
+
+        alert('Membro cadastrado com sucesso!')
+
+        // Reset form
+        memberForm.value = {
+          name: '',
+          cpf: '',
+          rg: '',
+          email: '',
+          phone: '',
+          spouse: '',
+          children: []
+        }
+      } catch (error) {
+        console.error('Erro detalhado:', error) // Debug detalhado
+        alert('Erro ao cadastrar membro: ' + error.message)
+      }
+    }
+
+    // Atualizar membro no Firestore
+    const editMember = async (member) => {
+      try {
+        const memberRef = doc(db, 'members', member.id)
+        await updateDoc(memberRef, memberForm.value)
+        const index = members.value.findIndex(m => m.id === member.id)
+        if (index !== -1) {
+          members.value[index] = { ...member }
+        }
+      } catch (error) {
+        console.error('Erro ao atualizar membro:', error)
+      }
+    }
+
+    // Deletar membro do Firestore
+    const deleteMember = async (id) => {
+      if (confirm('Deseja realmente excluir este membro?')) {
+        try {
+          await deleteDoc(doc(db, 'members', id))
+          members.value = members.value.filter(m => m.id !== id)
+        } catch (error) {
+          console.error('Erro ao excluir membro:', error)
+        }
+      }
+    }
+
+    // Carregar membros quando o componente for montado
+    onMounted(loadMembers)
 
     const addChild = () => {
       memberForm.value.children.push({
@@ -182,38 +259,9 @@ export default {
       memberForm.value.children.splice(index, 1)
     }
 
-    const handleSubmit = () => {
-      // Adicionar o novo membro à lista
-      members.value.push({
-        id: Date.now(),
-        ...memberForm.value
-      })
-
-      // Reset form
-      memberForm.value = {
-        name: '',
-        cpf: '',
-        rg: '',
-        email: '',
-        phone: '',
-        spouse: '',
-        children: []
-      }
-    }
-
-    const editMember = (member) => {
-      memberForm.value = { ...member }
-    }
-
-    const deleteMember = (id) => {
-      if (confirm('Deseja realmente excluir este membro?')) {
-        members.value = members.value.filter(m => m.id !== id)
-      }
-    }
-
     return {
       memberForm,
-      members, // Exportar members
+      members,
       addChild,
       removeChild,
       handleSubmit,
