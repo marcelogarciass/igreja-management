@@ -121,14 +121,15 @@
 </template>
 
 <script>
-import { ref, computed } from 'vue'
-import { useFinances } from '@/store/finances'
+import { ref, computed, onMounted } from 'vue'
+import { db } from '@/firebase/config'
+import { collection, addDoc } from 'firebase/firestore'
+import { useFinanceStore } from '@/stores/financeStore'
 
 export default {
   name: 'TithesView',
   setup() {
-    const { addTithe, addOffering } = useFinances()
-    
+    const financeStore = useFinanceStore()
     const titheForm = ref({
       memberName: '',
       value: '',
@@ -143,39 +144,88 @@ export default {
     
     const records = ref([])
     
-    const handleTitheSubmit = () => {
-      const newTithe = {
-        id: Date.now(),
-        type: 'tithe',
-        ...titheForm.value
-      }
-      
-      records.value.push(newTithe)
-      addTithe(newTithe)
-      
-      // Limpa o formulário
-      titheForm.value = {
-        memberName: '',
-        value: '',
-        date: new Date().toISOString().split('T')[0]
+    // Modifique o loadRecords para usar o store
+    const loadRecords = async () => {
+      try {
+        await financeStore.fetchAllTransactions()
+        records.value = [
+          ...financeStore.tithes,
+          ...financeStore.offerings
+        ].sort((a, b) => new Date(b.date) - new Date(a.date))
+      } catch (error) {
+        console.error('Erro ao carregar registros:', error)
       }
     }
     
-    const handleOfferingSubmit = () => {
-      const newOffering = {
-        id: Date.now(),
-        type: 'offering',
-        ...offeringForm.value
+    // Modifique o handleTitheSubmit para recarregar os registros após salvar
+    const handleTitheSubmit = async () => {
+      try {
+        const newTithe = {
+          type: 'tithe',
+          memberName: titheForm.value.memberName,
+          value: Number(titheForm.value.value),
+          date: titheForm.value.date,
+          createdAt: new Date().toISOString()
+        }
+        
+        const docRef = await addDoc(collection(db, 'tithes'), newTithe)
+        console.log('Dízimo salvo com ID:', docRef.id)
+        
+        const titheWithId = {
+          id: docRef.id,
+          ...newTithe
+        }
+        
+        records.value.push(titheWithId)
+        financeStore.addTransaction(titheWithId) // Adiciona ao store
+        
+        alert('Dízimo registrado com sucesso!')
+        
+        // Limpa o formulário
+        titheForm.value = {
+          memberName: '',
+          value: '',
+          date: new Date().toISOString().split('T')[0]
+        }
+      } catch (error) {
+        console.error('Erro ao salvar dízimo:', error)
+        alert('Erro ao registrar dízimo: ' + error.message)
       }
-      
-      records.value.push(newOffering)
-      addOffering(newOffering)
-      
-      // Limpa o formulário
-      offeringForm.value = {
-        memberName: '',
-        value: '',
-        date: new Date().toISOString().split('T')[0]
+    }
+    
+    // Atualize o handleOfferingSubmit de forma similar
+    const handleOfferingSubmit = async () => {
+      try {
+        const newOffering = {
+          type: 'offering',
+          memberName: offeringForm.value.memberName,
+          value: Number(offeringForm.value.value),
+          date: offeringForm.value.date,
+          createdAt: new Date().toISOString()
+        }
+        
+        const docRef = await addDoc(collection(db, 'tithes'), newOffering)
+        console.log('Oferta salva com ID:', docRef.id)
+        
+        const offeringWithId = {
+          id: docRef.id,
+          ...newOffering
+        }
+        
+        records.value.push(offeringWithId)
+        financeStore.addTransaction(offeringWithId) // Adiciona ao store
+        
+        alert('Oferta registrada com sucesso!')
+        
+        // Limpa o formulário
+        offeringForm.value = {
+          memberName: '',
+          value: '',
+          date: new Date().toISOString().split('T')[0]
+        }
+      } catch (error) {
+        console.error('Erro ao salvar oferta:', error)
+        alert('Erro ao registrar oferta: ' + error.message)
       }
     }
     
@@ -193,6 +243,8 @@ export default {
         maximumFractionDigits: 2
       })
     }
+
+    onMounted(loadRecords)
     
     return {
       titheForm,

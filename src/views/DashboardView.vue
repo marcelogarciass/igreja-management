@@ -1,47 +1,39 @@
 <template>
   <div class="dashboard">
-    <h1>Painel Principal</h1>
-    
     <div class="dashboard-cards">
       <div class="info-card">
-        <h3>Total de Membros</h3>
-        <p class="number">0</p>
-      </div>
-      <div class="info-card">
         <h3>Total de Dízimos</h3>
-        <p class="number">R$ {{ formatValue(totalTithes) }}</p>
+        <div class="number">R$ {{ formatValue(totalTithes) }}</div>
       </div>
       <div class="info-card">
         <h3>Total de Ofertas</h3>
-        <p class="number">R$ {{ formatValue(totalOfferings) }}</p>
+        <div class="number">R$ {{ formatValue(totalOfferings) }}</div>
       </div>
       <div class="info-card">
         <h3>Saldo Atual</h3>
-        <p class="number">R$ {{ formatValue(currentBalance) }}</p>
+        <div class="number">R$ {{ formatValue(currentBalance) }}</div>
       </div>
     </div>
 
-    <!-- Botões de Navegação -->
-    <div class="navigation-buttons">
-      <router-link to="/" class="nav-button">
-        <i class="fas fa-home"></i>
-        Painel
-      </router-link>
+    <div class="quick-actions">
       <router-link to="/membros" class="nav-button">
         <i class="fas fa-users"></i>
-        Membros
+        <span>Membros</span>
       </router-link>
-      <router-link to="/dizimos" class="nav-button">
+
+      <router-link to="/contributions" class="nav-button">
         <i class="fas fa-hand-holding-usd"></i>
-        Dízimos
+        <span>Contribuições</span>
       </router-link>
+
       <router-link to="/financeiro" class="nav-button">
-        <i class="fas fa-chart-line"></i>
-        Financeiro
+        <i class="fas fa-dollar-sign"></i>
+        <span>Financeiro</span>
       </router-link>
+
       <router-link to="/configuracoes" class="nav-button">
         <i class="fas fa-cog"></i>
-        Configurações
+        <span>Configurações</span>
       </router-link>
     </div>
   </div>
@@ -108,7 +100,7 @@ export default {
   }
 }
 
-.navigation-buttons {
+.quick-actions {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 20px;

@@ -1,7 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import DashboardView from '@/views/DashboardView.vue'
 import MembersView from '@/views/MembersView.vue'
-import TithesView from '@/views/TithesView.vue'
 import FinancialView from '@/views/FinancialView.vue'
 import LoginView from '@/views/LoginView.vue'
 import SettingsView from '@/views/SettingsView.vue'
@@ -34,11 +33,11 @@ const routes = [
     }
   },
   {
-    path: '/dizimos',
-    name: 'tithes',
-    component: TithesView,
+    path: '/contributions',
+    name: 'contributions',
+    component: () => import('../views/ContributionsView.vue'),
     meta: {
-      title: 'Dízimos e Ofertas',
+      title: 'Contribuições',
       requiresAuth: true
     }
   },

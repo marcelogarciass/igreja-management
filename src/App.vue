@@ -6,22 +6,58 @@
         <h1>{{ churchName || 'Igreja Management' }}</h1>
       </div>
       <nav class="main-nav">
-        <router-link to="/">
-          <i class="fas fa-home"></i>
-          Painel
-        </router-link>
-        <router-link to="/membros">
-          <i class="fas fa-users"></i>
-          Membros
-        </router-link>
-        <router-link to="/dizimos">
-          <i class="fas fa-hand-holding-usd"></i>
-          Dízimos
-        </router-link>
-        <router-link to="/financeiro">
+        <router-link to="/" class="nav-item">
           <i class="fas fa-chart-line"></i>
-          Financeiro
+          <span>Painel</span>
         </router-link>
+        
+        <router-link to="/membros" class="nav-item">
+          <i class="fas fa-users"></i>
+          <span>Membros</span>
+        </router-link>
+
+        <router-link to="/contributions" class="nav-item">
+          <i class="fas fa-hand-holding-usd"></i>
+          <span>Contribuições</span>
+        </router-link>
+
+        <router-link to="/financeiro" class="nav-item">
+          <i class="fas fa-dollar-sign"></i>
+          <span>Financeiro</span>
+        </router-link>
+
+        <router-link to="/configuracoes" class="nav-item" v-if="isAdmin">
+          <i class="fas fa-cog"></i>
+          <span>Configurações</span>
+        </router-link>
+      </nav>
+      <nav v-if="isAuthenticated" class="sidebar">
+        <div class="nav-links">
+          <router-link to="/" class="nav-item">
+            <i class="fas fa-chart-line"></i>
+            <span>Painel</span>
+          </router-link>
+          
+          <router-link to="/membros" class="nav-item">
+            <i class="fas fa-users"></i>
+            <span>Membros</span>
+          </router-link>
+  
+          <router-link to="/contributions" class="nav-item">
+            <i class="fas fa-hand-holding-usd"></i>
+            <span>Contribuições</span>
+          </router-link>
+  
+          <router-link to="/financeiro" class="nav-item">
+            <i class="fas fa-dollar-sign"></i>
+            <span>Financeiro</span>
+          </router-link>
+  
+          <router-link to="/configuracoes" class="nav-item" v-if="isAdmin">
+            <i class="fas fa-cog"></i>
+            <span>Configurações</span>
+          </router-link>
+        </div>
         <button @click="handleLogout" class="logout-button">
           <i class="fas fa-sign-out-alt"></i>
           Sair
