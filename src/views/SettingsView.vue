@@ -163,21 +163,17 @@
 </template>
 
 <script>
-import { ref } from 'vue'  // Removido onMounted da importação
+import { ref, onMounted } from 'vue'
 import { useSettings } from '@/store/settings'
+import { saveChurchSettings, createUser, getUsers, deleteUser as deleteUserFromDB } from '@/supabase/config'
 
 export default {
   name: 'SettingsView',
   setup() {
     const { churchSettings, updateSettings } = useSettings()
-    const users = ref([
-      {
-        id: 1,
-        name: 'Administrador',
-        email: 'admin@igreja.com',
-        role: 'admin'
-      }
-    ])
+    const users = ref([])
+    const loading = ref(false)
+    const error = ref(null)
 
     const newUser = ref({
       name: '',
@@ -186,7 +182,7 @@ export default {
       role: 'user'
     })
 
-    const handleLogoUpload = (event) => {
+    const handleLogoUpload = async (event) => {
       const file = event.target.files[0]
       if (file) {
         const reader = new FileReader()
@@ -197,29 +193,82 @@ export default {
       }
     }
 
-    const handleAddUser = () => {
-      users.value.push({
-        id: Date.now(),
-        ...newUser.value
-      })
-      newUser.value = {
-        name: '',
-        email: '',
-        password: '',
-        role: 'user'
+    const handleAddUser = async () => {
+      try {
+        loading.value = true
+        const { error: createError } = await createUser(newUser.value)
+        if (createError) throw createError
+
+        // Atualiza a lista de usuários
+        const { data: updatedUsers, error: fetchError } = await getUsers()
+        if (fetchError) throw fetchError
+        users.value = updatedUsers
+
+        // Limpa o formulário
+        newUser.value = {
+          name: '',
+          email: '',
+          password: '',
+          role: 'user'
+        }
+
+        alert('Usuário criado com sucesso!')
+      } catch (err) {
+        error.value = err.message
+        alert('Erro ao criar usuário: ' + err.message)
+      } finally {
+        loading.value = false
       }
     }
 
-    const deleteUser = (id) => {
+    const deleteUser = async (id) => {
       if (confirm('Tem certeza que deseja excluir este usuário?')) {
-        users.value = users.value.filter(user => user.id !== id)
+        try {
+          loading.value = true
+          const { error: deleteError } = await deleteUserFromDB(id)
+          if (deleteError) throw deleteError
+
+          users.value = users.value.filter(user => user.id !== id)
+          alert('Usuário excluído com sucesso!')
+        } catch (err) {
+          error.value = err.message
+          alert('Erro ao excluir usuário: ' + err.message)
+        } finally {
+          loading.value = false
+        }
       }
     }
 
-    const saveSettings = () => {
-      updateSettings(churchSettings.value)
-      alert('Configurações salvas com sucesso!')
+    const saveSettings = async () => {
+      try {
+        loading.value = true
+        const { error: saveError } = await saveChurchSettings(churchSettings.value)
+        if (saveError) throw saveError
+
+        updateSettings(churchSettings.value)
+        alert('Configurações salvas com sucesso!')
+      } catch (err) {
+        error.value = err.message
+        alert('Erro ao salvar configurações: ' + err.message)
+      } finally {
+        loading.value = false
+      }
     }
+
+    // Carrega a lista de usuários ao montar o componente
+    onMounted(async () => {
+      try {
+        loading.value = true
+        const { data: fetchedUsers, error: fetchError } = await getUsers()
+        if (fetchError) throw fetchError
+        users.value = fetchedUsers
+      } catch (err) {
+        error.value = err.message
+        console.error('Erro ao carregar usuários:', err)
+      } finally {
+        loading.value = false
+      }
+    })
 
     return {
       churchSettings,
