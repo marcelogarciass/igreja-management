@@ -154,8 +154,7 @@
 
 <script>
 import { ref, onMounted } from 'vue'
-import { db } from '@/firebase/config'
-import { collection, addDoc, getDocs, deleteDoc, doc, updateDoc } from 'firebase/firestore'
+// Removendo importações do Firebase e usando armazenamento local
 
 export default {
   name: 'MembersView',
@@ -172,34 +171,32 @@ export default {
 
     const members = ref([])
 
-    // Carregar membros do Firestore
-    const loadMembers = async () => {
+    // Carregar membros do localStorage
+    const loadMembers = () => {
       try {
-        const querySnapshot = await getDocs(collection(db, 'members'))
-        members.value = querySnapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        }))
+        const savedMembers = localStorage.getItem('members')
+        if (savedMembers) {
+          members.value = JSON.parse(savedMembers)
+        }
       } catch (error) {
         console.error('Erro ao carregar membros:', error)
       }
     }
 
-    // Adicionar membro ao Firestore
-    const handleSubmit = async () => {
+    // Adicionar membro ao localStorage
+    const handleSubmit = () => {
       try {
         console.log('Iniciando salvamento...', memberForm.value) // Debug
-        const docRef = await addDoc(collection(db, 'members'), {
+        const newMember = {
+          id: 'local-' + Date.now(),
           ...memberForm.value,
           createdAt: new Date().toISOString()
-        })
+        }
         
-        console.log('Documento salvo com ID:', docRef.id) // Debug
+        members.value.push(newMember)
         
-        members.value.push({
-          id: docRef.id,
-          ...memberForm.value
-        })
+        // Salvar no localStorage
+        localStorage.setItem('members', JSON.stringify(members.value))
 
         alert('Membro cadastrado com sucesso!')
 
@@ -219,26 +216,27 @@ export default {
       }
     }
 
-    // Atualizar membro no Firestore
-    const editMember = async (member) => {
+    // Atualizar membro no localStorage
+    const editMember = (member) => {
       try {
-        const memberRef = doc(db, 'members', member.id)
-        await updateDoc(memberRef, memberForm.value)
         const index = members.value.findIndex(m => m.id === member.id)
         if (index !== -1) {
           members.value[index] = { ...member }
+          // Salvar no localStorage
+          localStorage.setItem('members', JSON.stringify(members.value))
         }
       } catch (error) {
         console.error('Erro ao atualizar membro:', error)
       }
     }
 
-    // Deletar membro do Firestore
-    const deleteMember = async (id) => {
+    // Deletar membro do localStorage
+    const deleteMember = (id) => {
       if (confirm('Deseja realmente excluir este membro?')) {
         try {
-          await deleteDoc(doc(db, 'members', id))
           members.value = members.value.filter(m => m.id !== id)
+          // Salvar no localStorage
+          localStorage.setItem('members', JSON.stringify(members.value))
         } catch (error) {
           console.error('Erro ao excluir membro:', error)
         }

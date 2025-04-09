@@ -1,6 +1,5 @@
 import { defineStore } from 'pinia'
-import { db } from '@/firebase/config'
-import { collection, getDocs, query, orderBy } from 'firebase/firestore'
+// Removendo importações do Firebase e usando dados locais
 
 export const useFinanceStore = defineStore('finance', {
   state: () => ({
@@ -29,20 +28,10 @@ export const useFinanceStore = defineStore('finance', {
   actions: {
     async fetchAllTransactions() {
       try {
-        const q = query(collection(db, 'tithes'), orderBy('date', 'desc'))
-        const querySnapshot = await getDocs(q)
-        
-        this.tithes = []
-        this.offerings = []
-        
-        querySnapshot.forEach((doc) => {
-          const data = { id: doc.id, ...doc.data() }
-          if (data.type === 'tithe') {
-            this.tithes.push(data)
-          } else {
-            this.offerings.push(data)
-          }
-        })
+        // Usando dados locais em vez de buscar do Firestore
+        // Você pode carregar dados de exemplo ou do localStorage
+        this.tithes = JSON.parse(localStorage.getItem('tithes') || '[]')
+        this.offerings = JSON.parse(localStorage.getItem('offerings') || '[]')
         
         this.calculateTotals()
       } catch (error) {

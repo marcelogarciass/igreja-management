@@ -121,8 +121,7 @@
 
 <script>
 import { ref, onMounted } from 'vue'
-import { db } from '@/firebase/config'
-import { collection, setDoc, getDocs, deleteDoc, doc } from 'firebase/firestore'
+// Removendo importações do Firebase e usando armazenamento local
 
 export default {
   name: 'ContributionsView',
@@ -139,39 +138,39 @@ export default {
     const contributions = ref([])
     const members = ref([])
 
-    const loadMembers = async () => {
+    const loadMembers = () => {
       try {
-        const querySnapshot = await getDocs(collection(db, 'members'))
-        members.value = querySnapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        }))
+        // Carregar membros do localStorage
+        const savedMembers = localStorage.getItem('members')
+        if (savedMembers) {
+          members.value = JSON.parse(savedMembers)
+        }
       } catch (error) {
         console.error('Erro ao carregar membros:', error)
       }
     }
 
-    const loadContributions = async () => {
+    const loadContributions = () => {
       try {
-        const querySnapshot = await getDocs(collection(db, 'contributions'))
-        contributions.value = querySnapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        }))
+        // Carregar contribuições do localStorage
+        const savedContributions = localStorage.getItem('contributions')
+        if (savedContributions) {
+          contributions.value = JSON.parse(savedContributions)
+        }
       } catch (error) {
         console.error('Erro ao carregar contribuições:', error)
       }
     }
 
-    // No script, modifique a função handleSubmit:
-    const handleSubmit = async () => {
+    const handleSubmit = () => {
       try {
         console.log('Iniciando salvamento...')
         
         const memberName = getMemberName(contributionForm.value.memberId)
         
-        // Criando o objeto de dados primeiro
+        // Criando o objeto de dados
         const contributionData = {
+          id: 'local-' + Date.now(),
           memberId: contributionForm.value.memberId,
           memberName,
           type: contributionForm.value.type,
@@ -184,21 +183,13 @@ export default {
     
         console.log('Dados a serem salvos:', contributionData)
     
-        // Salvando no Firestore
-        const contributionsRef = collection(db, 'contributions')
-        const docRef = doc(contributionsRef, 'ttYvm5vXR48xyQbF1dKP')
+        // Adiciona à lista local
+        contributions.value.push(contributionData)
         
-        await setDoc(docRef, contributionData)
+        // Salva no localStorage
+        localStorage.setItem('contributions', JSON.stringify(contributions.value))
         
-        console.log('Documento salvo com sucesso!')
-        
-        // Atualiza a lista local
-        const existingIndex = contributions.value.findIndex(c => c.id === 'ttYvm5vXR48xyQbF1dKP')
-        if (existingIndex !== -1) {
-          contributions.value[existingIndex] = { id: 'ttYvm5vXR48xyQbF1dKP', ...contributionData }
-        } else {
-          contributions.value.push({ id: 'ttYvm5vXR48xyQbF1dKP', ...contributionData })
-        }
+        console.log('Contribuição salva com sucesso!')
     
         alert('Contribuição registrada com sucesso!')
     
@@ -217,13 +208,14 @@ export default {
       }
     }
 
-    const deleteContribution = async (id) => {
-      if (confirm('Deseja realmente excluir este registro?')) {
+    const deleteContribution = (id) => {
+      if (confirm('Deseja realmente excluir esta contribuição?')) {
         try {
-          await deleteDoc(doc(db, 'contributions', id))
           contributions.value = contributions.value.filter(c => c.id !== id)
+          // Salvar no localStorage
+          localStorage.setItem('contributions', JSON.stringify(contributions.value))
         } catch (error) {
-          console.error('Erro ao excluir registro:', error)
+          console.error('Erro ao excluir contribuição:', error)
         }
       }
     }

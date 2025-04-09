@@ -82,9 +82,6 @@
 <script>
 import { ref, onMounted, watch, computed } from 'vue'
 import { useRouter } from 'vue-router'
-import { auth, db } from './firebase/config'
-import { signOut } from 'firebase/auth'
-import { doc, getDoc } from 'firebase/firestore'
 
 export default {
   setup() {
@@ -93,35 +90,28 @@ export default {
     const churchName = ref('')
     const churchLogo = ref('')
     const isLoginPage = computed(() => router.currentRoute.value.path === '/login')
+    const isAdmin = ref(false)
 
-    const loadChurchData = async () => {
+    const loadChurchData = () => {
       try {
-        const churchDoc = await getDoc(doc(db, 'church', 'settings'))
-        if (churchDoc.exists()) {
-          const data = churchDoc.data()
-          churchName.value = data.name || ''
-          churchLogo.value = data.logo || ''
-          // Atualiza também no localStorage para backup
-          localStorage.setItem('churchName', data.name || '')
-          localStorage.setItem('churchLogo', data.logo || '')
-        }
-      } catch (error) {
-        console.error('Erro ao carregar dados da igreja:', error)
-        // Fallback para dados do localStorage
+        // Carregar dados do localStorage
         churchName.value = localStorage.getItem('churchName') || ''
         churchLogo.value = localStorage.getItem('churchLogo') || ''
+        isAdmin.value = localStorage.getItem('isAdmin') === 'true'
+      } catch (error) {
+        console.error('Erro ao carregar dados da igreja:', error)
       }
     }
 
     onMounted(() => {
-      auth.onAuthStateChanged((user) => {
-        isAuthenticated.value = !!user
-        if (user) {
-          loadChurchData()
-        } else {
-          router.push('/login')
-        }
-      })
+      // Verificar autenticação no localStorage
+      const authStatus = localStorage.getItem('isAuthenticated') === 'true'
+      isAuthenticated.value = authStatus
+      if (authStatus) {
+        loadChurchData()
+      } else {
+        router.push('/login')
+      }
     })
 
     window.addEventListener('storage', (e) => {
@@ -132,18 +122,16 @@ export default {
         churchLogo.value = e.newValue || ''
       }
     })
+
     watch(churchName, (newName) => {
       document.title = newName ? `${newName} - Sistema de Gestão` : 'Igreja Management'
     })
 
-    const handleLogout = async () => {
-      try {
-        await signOut(auth)
-        localStorage.removeItem('isAuthenticated')
-        router.push('/login')
-      } catch (error) {
-        console.error('Erro ao fazer logout:', error)
-      }
+    const handleLogout = () => {
+      localStorage.removeItem('isAuthenticated')
+      localStorage.removeItem('isAdmin')
+      isAuthenticated.value = false
+      router.push('/login')
     }
 
     return {
@@ -151,7 +139,8 @@ export default {
       handleLogout,
       churchName,
       churchLogo,
-      isLoginPage
+      isLoginPage,
+      isAdmin
     }
   }
 }

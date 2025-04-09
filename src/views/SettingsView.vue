@@ -1,129 +1,162 @@
 <template>
-  <div class="settings-container">
-    <h1>Configurações</h1>
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <h1 class="text-3xl font-bold text-gray-900 mb-8">Configurações</h1>
 
     <!-- Configurações da Igreja -->
-    <div class="settings-section">
-      <h2>Configurações da Igreja</h2>
-      <div class="form-group">
-        <label>Nome da Igreja</label>
-        <input 
-          type="text" 
-          v-model="churchSettings.name" 
-          placeholder="Nome da Igreja"
-        >
-      </div>
-
-      <div class="form-group">
-        <label>Logo da Igreja</label>
-        <div class="logo-upload">
-          <img 
-            v-if="churchSettings.logo" 
-            :src="churchSettings.logo" 
-            alt="Logo da Igreja"
-          >
+    <div class="bg-white rounded-lg shadow-sm p-6 mb-8">
+      <h2 class="text-xl font-semibold text-gray-900 mb-6">Configurações da Igreja</h2>
+      
+      <div class="space-y-6">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Nome da Igreja</label>
           <input 
-            type="file" 
-            @change="handleLogoUpload" 
-            accept="image/*"
+            type="text" 
+            v-model="churchSettings.name" 
+            placeholder="Nome da Igreja"
+            class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
           >
         </div>
-      </div>
 
-      <div class="form-group">
-        <label>Tema de Cores</label>
-        <div class="color-picker">
-          <div class="color-option">
-            <label>Cor Principal</label>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Logo da Igreja</label>
+          <div class="space-y-4">
+            <img 
+              v-if="churchSettings.logo" 
+              :src="churchSettings.logo" 
+              alt="Logo da Igreja"
+              class="max-w-xs rounded-lg shadow-sm"
+            >
             <input 
-              type="color" 
-              v-model="churchSettings.primaryColor"
+              type="file" 
+              @change="handleLogoUpload" 
+              accept="image/*"
+              class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 transition-colors"
             >
           </div>
-          <div class="color-option">
-            <label>Cor Secundária</label>
-            <input 
-              type="color" 
-              v-model="churchSettings.secondaryColor"
-            >
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-4">Tema de Cores</label>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <div>
+              <label class="block text-sm text-gray-600 mb-2">Cor Principal</label>
+              <input 
+                type="color" 
+                v-model="churchSettings.primaryColor"
+                class="h-10 w-full rounded-lg shadow-sm cursor-pointer"
+              >
+            </div>
+            <div>
+              <label class="block text-sm text-gray-600 mb-2">Cor Secundária</label>
+              <input 
+                type="color" 
+                v-model="churchSettings.secondaryColor"
+                class="h-10 w-full rounded-lg shadow-sm cursor-pointer"
+              >
+            </div>
           </div>
         </div>
       </div>
     </div>
 
     <!-- Gerenciamento de Usuários -->
-    <div class="settings-section">
-      <h2>Gerenciamento de Usuários</h2>
+    <div class="bg-white rounded-lg shadow-sm p-6 mb-8">
+      <h2 class="text-xl font-semibold text-gray-900 mb-6">Gerenciamento de Usuários</h2>
       
       <!-- Formulário de Novo Usuário -->
-      <form @submit.prevent="handleAddUser" class="user-form">
-        <div class="form-group">
-          <label>Nome</label>
-          <input 
-            type="text" 
-            v-model="newUser.name" 
-            required
-          >
+      <form @submit.prevent="handleAddUser" class="space-y-6 mb-8">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Nome</label>
+            <input 
+              type="text" 
+              v-model="newUser.name" 
+              required
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+            >
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">E-mail</label>
+            <input 
+              type="email" 
+              v-model="newUser.email" 
+              required
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+            >
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Senha</label>
+            <input 
+              type="password" 
+              v-model="newUser.password" 
+              required
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+            >
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Tipo de Usuário</label>
+            <select 
+              v-model="newUser.role"
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+            >
+              <option value="admin">Administrador</option>
+              <option value="user">Usuário Comum</option>
+            </select>
+          </div>
         </div>
-        <div class="form-group">
-          <label>E-mail</label>
-          <input 
-            type="email" 
-            v-model="newUser.email" 
-            required
-          >
-        </div>
-        <div class="form-group">
-          <label>Senha</label>
-          <input 
-            type="password" 
-            v-model="newUser.password" 
-            required
-          >
-        </div>
-        <div class="form-group">
-          <label>Tipo de Usuário</label>
-          <select v-model="newUser.role">
-            <option value="admin">Administrador</option>
-            <option value="user">Usuário Comum</option>
-          </select>
-        </div>
-        <button type="submit" class="add-button">Adicionar Usuário</button>
+        <button 
+          type="submit" 
+          class="w-full sm:w-auto px-6 py-3 bg-green-600 text-white font-medium rounded-lg shadow-sm hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors"
+        >
+          Adicionar Usuário
+        </button>
       </form>
 
       <!-- Lista de Usuários -->
-      <div class="users-list">
-        <h3>Usuários Cadastrados</h3>
-        <table>
-          <thead>
-            <tr>
-              <th>Nome</th>
-              <th>E-mail</th>
-              <th>Tipo</th>
-              <th>Ações</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="user in users" :key="user.id">
-              <td>{{ user.name }}</td>
-              <td>{{ user.email }}</td>
-              <td>{{ user.role === 'admin' ? 'Administrador' : 'Usuário Comum' }}</td>
-              <td>
-                <button 
-                  @click="deleteUser(user.id)" 
-                  class="delete-button"
-                  :disabled="user.email === 'admin@igreja.com'"
-                >
-                  Excluir
-                </button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+      <div>
+        <h3 class="text-lg font-medium text-gray-900 mb-4">Usuários Cadastrados</h3>
+        <div class="overflow-x-auto">
+          <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+              <tr>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nome</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">E-mail</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tipo</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ações</th>
+              </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+              <tr v-for="user in users" :key="user.id" class="hover:bg-gray-50 transition-colors">
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ user.name }}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ user.email }}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  <span 
+                    :class="user.role === 'admin' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800'"
+                    class="px-2 py-1 rounded-full text-xs font-medium"
+                  >
+                    {{ user.role === 'admin' ? 'Administrador' : 'Usuário Comum' }}
+                  </span>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  <button 
+                    @click="deleteUser(user.id)" 
+                    :disabled="user.email === 'admin@igreja.com'"
+                    class="px-3 py-1 bg-red-600 text-white text-sm font-medium rounded hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+                  >
+                    Excluir
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
 
-    <button @click="saveSettings" class="save-button">
+    <button 
+      @click="saveSettings" 
+      class="w-full px-6 py-3 bg-blue-600 text-white font-medium rounded-lg shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+    >
       Salvar Configurações
     </button>
   </div>
@@ -201,129 +234,6 @@ export default {
 }
 </script>
 
-<style scoped lang="scss">
-.settings-container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 20px;
-
-  h1 {
-    color: #2c3e50;
-    margin-bottom: 30px;
-  }
-}
-
-.settings-section {
-  background: white;
-  padding: 20px;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-  margin-bottom: 20px;
-
-  h2 {
-    color: #2c3e50;
-    margin-bottom: 20px;
-  }
-}
-
-.form-group {
-  margin-bottom: 20px;
-
-  label {
-    display: block;
-    margin-bottom: 8px;
-    color: #2c3e50;
-    font-weight: 500;
-  }
-
-  input, select {
-    width: 100%;
-    padding: 10px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    font-size: 16px;
-
-    &:focus {
-      outline: none;
-      border-color: #3498db;
-    }
-  }
-}
-
-.logo-upload {
-  .preview-logo {
-    max-width: 200px;
-    margin-bottom: 10px;
-    border-radius: 4px;
-  }
-}
-
-.color-picker {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 20px;
-
-  .color-option {
-    input[type="color"] {
-      height: 40px;
-    }
-  }
-}
-
-.users-list {
-  margin-top: 20px;
-
-  table {
-    width: 100%;
-    border-collapse: collapse;
-
-    th, td {
-      padding: 12px;
-      text-align: left;
-      border-bottom: 1px solid #ddd;
-    }
-
-    th {
-      background-color: #f8f9fa;
-      font-weight: 600;
-    }
-  }
-}
-
-.add-button, .save-button {
-  background-color: #27ae60;
-  color: white;
-  padding: 12px 24px;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 16px;
-
-  &:hover {
-    background-color: #219a52;
-  }
-}
-
-.delete-button {
-  background-color: #e74c3c;
-  color: white;
-  padding: 6px 12px;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-
-  &:hover {
-    background-color: #c0392b;
-  }
-
-  &:disabled {
-    background-color: #95a5a6;
-    cursor: not-allowed;
-  }
-}
-
-.save-button {
-  margin-top: 20px;
-  width: 100%;
-}
+<style scoped>
+/* Todos os estilos agora são gerenciados pelo Tailwind CSS */
 </style>
