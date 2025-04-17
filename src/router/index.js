@@ -1,79 +1,39 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import DashboardView from '@/views/DashboardView.vue'
-import MembersView from '@/views/MembersView.vue'
-import FinancialView from '@/views/FinancialView.vue'
-import LoginView from '@/views/LoginView.vue'
-import SettingsView from '@/views/SettingsView.vue'
+import { supabase } from '../lib/supabaseClient'
 
 const routes = [
   {
     path: '/login',
     name: 'login',
-    component: LoginView,
-    meta: {
-      title: 'Login'
-    }
+    component: () => import('../views/LoginView.vue'),
+    meta: { requiresAuth: false }
   },
   {
     path: '/',
     name: 'dashboard',
-    component: DashboardView,
-    meta: {
-      title: 'Painel Principal',
-      requiresAuth: true
-    }
+    component: () => import('../views/DashboardView.vue'),
+    meta: { requiresAuth: true }
   },
   {
-    path: '/membros',
+    path: '/members',
     name: 'members',
-    component: MembersView,
-    meta: {
-      title: 'Cadastro de Membros',
-      requiresAuth: true
-    }
-  },
-  {
-    path: '/contributions',
-    name: 'contributions',
-    component: () => import('../views/ContributionsView.vue'),
-    meta: {
-      title: 'Contribuições',
-      requiresAuth: true
-    }
-  },
-  {
-    path: '/financeiro',
-    name: 'financial',
-    component: FinancialView,
-    meta: {
-      title: 'Controle Financeiro',
-      requiresAuth: true
-    }
-  },
-  {
-    path: '/configuracoes',
-    name: 'settings',
-    component: SettingsView,
-    meta: {
-      title: 'Configurações',
-      requiresAuth: true,
-      requiresAdmin: true
-    }
+    component: () => import('../views/MembersView.vue'),
+    meta: { requiresAuth: true }
   }
 ]
 
 const router = createRouter({
-  history: createWebHistory(process.env.BASE_URL),
+  history: createWebHistory(),
   routes
 })
 
-router.beforeEach((to, from, next) => {
-  const isAuthenticated = localStorage.getItem('isAuthenticated') === 'true'
-  document.title = `${to.meta.title} - Igreja Management`
+router.beforeEach(async (to, from, next) => {
+  const { data: { session } } = await supabase.auth.getSession()
+  const requiresAuth = to.matched.some(record => record.meta.requiresAuth)
 
-  if (to.meta.requiresAuth && !isAuthenticated) {
+  if (requiresAuth && !session) {
     next('/login')
-  } else if (to.path === '/login' && isAuthenticated) {
+  } else if (to.path === '/login' && session) {
     next('/')
   } else {
     next()

@@ -1,50 +1,41 @@
 <template>
-  <div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-900 to-blue-700 px-4 sm:px-6 lg:px-8">
-    <div class="max-w-md w-full space-y-8 bg-white p-8 rounded-xl shadow-2xl transform transition-all duration-500 hover:scale-[1.02]">
-      <div class="text-center">
-        <div v-if="churchSettings.logo" class="mx-auto w-32 h-32 mb-6">
-          <img :src="churchSettings.logo" :alt="churchSettings.name" class="w-full h-full object-contain">
-        </div>
-        <h1 class="text-3xl font-bold text-gray-900 mb-2">{{ churchSettings.name || 'Login' }}</h1>
-        <p class="text-sm text-gray-600">Acesse o sistema de gestão</p>
+  <div class="login-container">
+    <div class="login-card card">
+      <h2 class="text-center mb-4">Login</h2>
+      
+      <div v-if="errorMessage" class="alert alert-danger mb-3">
+        {{ errorMessage }}
       </div>
-
-      <form @submit.prevent="handleLogin" class="mt-8 space-y-6">
-        <div class="space-y-4">
-          <div>
-            <label for="email" class="block text-sm font-medium text-gray-700">E-mail</label>
-            <div class="mt-1 relative">
-              <input 
-                type="email" 
-                id="email" 
-                v-model="loginForm.email" 
-                required
-                placeholder="Digite seu e-mail"
-                class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300"
-              >
-            </div>
-          </div>
-
-          <div>
-            <label for="password" class="block text-sm font-medium text-gray-700">Senha</label>
-            <div class="mt-1 relative">
-              <input 
-                type="password" 
-                id="password" 
-                v-model="loginForm.password" 
-                required
-                placeholder="Digite sua senha"
-                class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300"
-              >
-            </div>
-          </div>
+      
+      <form @submit.prevent="handleLogin">
+        <div class="form-group">
+          <label class="form-label" for="email">Email</label>
+          <input 
+            type="email" 
+            id="email" 
+            v-model="email" 
+            class="form-control" 
+            required
+          />
         </div>
-
+        
+        <div class="form-group">
+          <label class="form-label" for="password">Senha</label>
+          <input 
+            type="password" 
+            id="password" 
+            v-model="password" 
+            class="form-control" 
+            required
+          />
+        </div>
+        
         <button 
           type="submit" 
-          class="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transform transition-all duration-300 hover:scale-[1.02]"
+          class="btn btn-primary w-100 mt-3"
+          :disabled="loading"
         >
-          Entrar
+          {{ loading ? 'Entrando...' : 'Entrar' }}
         </button>
       </form>
     </div>
@@ -54,41 +45,82 @@
 <script>
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { useSettings } from '../store/settings'
+import { supabase } from '@/lib/supabaseClient'
 
 export default {
   name: 'LoginView',
   setup() {
-    const { churchSettings } = useSettings()
     const router = useRouter()
-    const loginForm = ref({
-      email: '',
-      password: ''
-    })
+    const email = ref('')
+    const password = ref('')
+    const loading = ref(false)
+    const errorMessage = ref('')
 
-    const handleLogin = () => {
-      if (loginForm.value.email === 'admin@igreja.com' && loginForm.value.password === 'admin') {
-        localStorage.setItem('isAuthenticated', 'true')
-        localStorage.setItem('isAdmin', 'true')
+    const handleLogin = async () => {
+      try {
+        loading.value = true
+        errorMessage.value = ''
+        
+        // Test connection first
+        const { error: pingError } = await supabase.from('test').select('*').limit(1)
+        if (pingError) throw new Error('Cannot connect to Supabase')
+
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email: email.value,
+          password: password.value
+        })
+        
+        if (error) throw error
         router.push('/')
-      } else if (loginForm.value.email === 'user@igreja.com' && loginForm.value.password === 'user') {
-        localStorage.setItem('isAuthenticated', 'true')
-        localStorage.setItem('isAdmin', 'false')
-        router.push('/')
-      } else {
-        alert('Credenciais inválidas!\nUse admin@igreja.com/admin ou user@igreja.com/user')
+      } catch (error) {
+        console.error('Login error:', error)
+        errorMessage.value = error.message.includes('fetch')
+          ? 'Erro de conexão com o servidor. Verifique sua internet'
+          : error.message
+      } finally {
+        loading.value = false
       }
     }
 
     return {
-      loginForm,
-      handleLogin,
-      churchSettings
+      email,
+      password,
+      loading,
+      errorMessage,
+      handleLogin
     }
   }
 }
 </script>
 
 <style scoped>
-/* Todos os estilos agora são gerenciados pelo Tailwind CSS */
+.login-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  padding: var(--spacing-md);
+  background-color: var(--bg-color);
+}
+
+.login-card {
+  width: 100%;
+  max-width: 400px;
+}
+
+.alert {
+  padding: 12px;
+  border-radius: var(--border-radius-sm);
+  font-size: 14px;
+}
+
+.alert-danger {
+  background-color: rgba(249, 65, 68, 0.1);
+  color: var(--danger-color);
+  border: 1px solid rgba(249, 65, 68, 0.2);
+}
+
+.w-100 {
+  width: 100%;
+}
 </style>
