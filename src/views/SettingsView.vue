@@ -166,6 +166,7 @@
 import { ref, onMounted } from 'vue'
 import { useSettings } from '@/store/settings'
 import { saveChurchSettings, createUser, getUsers, deleteUser as deleteUserFromDB } from '@/supabase/config'
+import { supabase } from '@/lib/supabaseClient'
 
 export default {
   name: 'SettingsView',
@@ -270,6 +271,47 @@ export default {
       }
     })
 
+    const passwordForm = ref({
+      currentPassword: '',
+      newPassword: '',
+      confirmPassword: ''
+    })
+
+    const handleUpdatePassword = async () => {
+      try {
+        if (passwordForm.value.newPassword !== passwordForm.value.confirmPassword) {
+          throw new Error('As senhas não coincidem')
+        }
+
+        // Get current user
+        const { data: { user } } = await supabase.auth.getUser()
+
+        // Reauthenticate user
+        const { error: authError } = await supabase.auth.signInWithPassword({
+          email: user.email,
+          password: passwordForm.value.currentPassword
+        })
+
+        if (authError) throw new Error('Senha atual incorreta')
+
+        // Update password
+        const { error: updateError } = await supabase.auth.updateUser({
+          password: passwordForm.value.newPassword
+        })
+
+        if (updateError) throw updateError
+
+        alert('Senha atualizada com sucesso!')
+        passwordForm.value = {
+          currentPassword: '',
+          newPassword: '',
+          confirmPassword: ''
+        }
+      } catch (err) {
+        alert('Erro ao atualizar senha: ' + err.message)
+      }
+    }
+
     return {
       churchSettings,
       users,
@@ -277,7 +319,9 @@ export default {
       handleLogoUpload,
       handleAddUser,
       deleteUser,
-      saveSettings
+      saveSettings,
+      passwordForm,
+      handleUpdatePassword
     }
   }
 }
